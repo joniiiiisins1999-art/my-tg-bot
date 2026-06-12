@@ -4,16 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Игровой Маркет</title>
-          <script>
-        // Инициализируем Telegram WebApp безопасным способом
+    <!-- Официальный скрипт Telegram -->
+    <script src="https://telegram.org"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 15px;
+        }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid #0088cc; }
+        .categories { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .cat-btn {
+            background: #1e1e1e; color: #fff; border: 1px solid #2d2d2d;
+            padding: 10px 5px; border-radius: 8px; cursor: pointer; font-size: 13px; text-align: center;
+        }
+        .cat-btn.active { border-color: #0088cc; background: #0088cc; }
+        .products { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+        .product-card {
+            background: #1e1e1e; padding: 12px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid #2d2d2d;
+        }
+        .product-info h4 { margin: 0 0 4px 0; font-size: 15px; }
+        .product-info p { margin: 0; color: #0088cc; font-weight: bold; font-size: 14px; }
+        .buy-btn {
+            background: #0088cc; color: #fff; border: none; padding: 8px 14px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;
+        }
+        .order-form {
+            background: #1e1e1e; padding: 15px; border-radius: 12px;
+            border: 1px solid #2d2d2d; display: none; position: fixed;
+            bottom: 10px; left: 10px; right: 10px; z-index: 100;
+        }
+        .order-form h3 { margin: 0 0 10px 0; font-size: 16px; text-align: center; }
+        .order-form input {
+            width: 100%; padding: 10px; background: #121212; border: 1px solid #2d2d2d;
+            color: #fff; border-radius: 6px; margin-bottom: 12px; box-sizing: border-box;
+        }
+        .send-btn {
+            width: 100%; background: #2ecc71; color: #fff; border: none;
+            padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="https://placehold.co" alt="Лого">
+        <h2>Игровой Маркет</h2>
+    </div>
+
+    <!-- Кнопки категорий -->
+    <div class="categories">
+        <button class="cat-btn active" onclick="filterCat('steam')">Steam</button>
+        <button class="cat-btn" onclick="filterCat('psn')">PlayStation</button>
+        <button class="cat-btn" onclick="filterCat('xbox')">Xbox</button>
+    </div>
+
+    <!-- Сюда скрипт выводит товары -->
+    <div class="products" id="products-list"></div>
+
+    <!-- Всплывающее окно заказа -->
+    <div class="order-form" id="order-box">
+        <h3 id="order-title">Оформление заказа</h3>
+        <input type="text" id="user-data" placeholder="Введите данные">
+        <button class="send-btn" onclick="submitOrder()">Подтвердить заказ</button>
+    </div>
+
+    <!-- Логика приложения (Логика и переключение вкладок) -->
+    <script>
         const tg = window.Telegram ? window.Telegram.WebApp : null;
-        
         if (tg) {
             tg.ready();
             tg.expand();
         }
 
-        // База данных товаров
+        // Список твоих товаров
         const db = [
             {cat: 'steam', name: 'Пополнение CIS 500 ₽', price: 500},
             {cat: 'steam', name: 'Пополнение CIS 1000 ₽', price: 1000},
@@ -24,20 +92,12 @@
 
         let selectedProduct = null;
 
-        // Функция вывода товаров на экран
         function renderProducts(category) {
             const container = document.getElementById('products-list');
             if (!container) return;
-            
             container.innerHTML = '';
             
             const filtered = db.filter(p => p.cat === category);
-            
-            if (filtered.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Товаров в этой категории пока нет</div>';
-                return;
-            }
-
             filtered.forEach(p => {
                 container.innerHTML += `
                     <div class="product-card">
@@ -51,24 +111,18 @@
             });
         }
 
-        // Надежная функция фильтрации БЕЗ использования встроенного event
         function filterCat(cat) {
-            // Прячем форму заказа, если она была открыта
             const orderBox = document.getElementById('order-box');
             if (orderBox) orderBox.style.display = 'none';
 
-            // Снимаем класс active со всех трех кнопок
             const buttons = document.querySelectorAll('.cat-btn');
             buttons.forEach(b => b.classList.remove('active'));
 
-            // Ищем нужную кнопку по названию категории и делаем её активной
             buttons.forEach(b => {
                 if (b.getAttribute('onclick').includes(cat)) {
                     b.classList.add('active');
                 }
             });
-            
-            // Перерисовываем товары
             renderProducts(cat);
         }
 
@@ -83,9 +137,6 @@
                 input.placeholder = cat === 'steam' ? 'Введите логин Steam (не никнейм)' : 'Введите email от аккаунта';
                 title.innerText = `Заказ: ${name}`;
                 orderBox.style.display = 'block';
-                
-                // Прокручиваем страницу вниз к форме ввода
-                orderBox.scrollIntoView({ behavior: 'smooth' });
             }
         }
 
@@ -106,80 +157,16 @@
             });
             
             if (tg) {
-                tg.sendData(data); // Отправляем JSON админу и в чат
-                tg.close();        // Закрываем WebApp окно
+                tg.sendData(data);
+                tg.close();
             } else {
-                alert('Ошибка: Откройте маркет внутри Telegram чата!');
+                alert('Заказ оформлен (вне Telegram): ' + data);
             }
         }
 
-        // Самый надежный запуск при полной загрузке страницы
         window.onload = function() {
             renderProducts('steam');
         };
-    </script>
-
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        const db = [
-            {cat: 'steam', name: 'Пополнение CIS 500 ₽', price: 500},
-            {cat: 'steam', name: 'Пополнение CIS 1000 ₽', price: 1000},
-            {cat: 'psn', name: 'PS Plus Essential 1 мес', price: 1300},
-            {cat: 'psn', name: 'PS Plus Extra 3 мес', price: 3100},
-            {cat: 'xbox', name: 'Game Pass Ultimate 12 мес', price: 4600}
-        ];
-
-        let selectedProduct = null;
-
-        function renderProducts(category) {
-            const container = document.getElementById('products-list');
-            container.innerHTML = '';
-            db.filter(p => p.cat === category).forEach(p => {
-                container.innerHTML += `
-                    <div class="product-card">
-                        <div class="product-info">
-                            <h4>${p.name}</h4>
-                            <p>${p.price} ₽</p>
-                        </div>
-                        <button class="buy-btn" onclick="openForm('${p.name}', ${p.price}, '${p.cat}')">Купить</button>
-                    </div>
-                `;
-            });
-        }
-
-        function filterCat(cat) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            document.getElementById('order-box').style.display = 'none';
-            renderProducts(cat);
-        }
-
-        function openForm(name, price, cat) {
-            selectedProduct = { name, price };
-            const input = document.getElementById('user-data');
-            input.value = '';
-            input.placeholder = cat === 'steam' ? 'Введите логин Steam (не никнейм)' : 'Введите email от аккаунта';
-            document.getElementById('order-title').innerText = `Заказ: ${name}`;
-            document.getElementById('order-box').style.display = 'block';
-        }
-
-        function submitOrder() {
-            const accountData = document.getElementById('user-data').value.trim();
-            if (!accountData) {
-                alert('Пожалуйста, заполните поле ввода!');
-                return;
-            }
-            const data = JSON.stringify({
-                product: selectedProduct.name,
-                price: selectedProduct.price,
-                account: accountData
-            });
-            tg.sendData(data);
-            tg.close();
-        }
-
-        renderProducts('steam');
     </script>
 </body>
 </html>
