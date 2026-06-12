@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игровой Маркет</title>
+    <!-- Подключаем официальный скрипт Telegram WebApp -->
+    <script src="https://telegram.org"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #181818);
+            color: var(--tg-theme-text-color, #ffffff);
+            margin: 0;
+            padding: 15px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid var(--tg-theme-button-color, #0088cc);
+        }
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .cat-btn {
+            background: var(--tg-theme-secondary-bg-color, #242424);
+            color: #fff;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+        }
+        .cat-btn.active {
+            border-color: var(--tg-theme-button-color, #0088cc);
+            background: var(--tg-theme-button-color, #0088cc);
+        }
+        .products {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .product-card {
+            background: var(--tg-theme-secondary-bg-color, #242424);
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2e2e2e;
+        }
+        .product-info h4 { margin: 0 0 5px 0; font-size: 15px; }
+        .product-info p { margin: 0; color: #aaa; font-size: 13px; }
+        .buy-btn {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #fff);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <!-- Твое кастомное фото/логотип -->
+        <img src="https://placehold.co" alt="Логотип">
+        <h2>Твой Игровой Маркет</h2>
+    </div>
+
+    <!-- Переключатель платформ -->
+    <div class="categories">
+        <button class="cat-btn active" onclick="filterCat('steam')">⚙️ Steam</button>
+        <button class="cat-btn" onclick="filterCat('psn')">🎮 PlayStation</button>
+        <button class="cat-btn" onclick="filterCat('xbox')">🕹️ Xbox</button>
+    </div>
+
+    <!-- Сетка товаров -->
+    <div class="products" id="products-list">
+        <!-- Товары генерируются скриптом ниже -->
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Раскрываем окно на максимум
+
+        // Массив товаров (измени названия, фото и цены на свои)
+        const db = [
+            {id: 1, cat: 'steam', name: 'Пополнение баланса CIS', price: '500 руб'},
+            {id: 2, cat: 'steam', name: 'Пополнение баланса CIS', price: '1000 руб'},
+            {id: 3, cat: 'psn', name: 'Подписка PS Plus Essential 1 мес', price: '1200 руб'},
+            {id: 4, cat: 'psn', name: 'Подписка PS Plus Extra 3 мес', price: '2900 руб'},
+            {id: 5, cat: 'xbox', name: 'Xbox Game Pass Ultimate 12 мес', price: '4500 руб'}
+        ];
+
+        function renderProducts(category) {
+            const container = document.getElementById('products-list');
+            container.innerHTML = '';
+            
+            const filtered = db.filter(p => p.cat === category);
+            filtered.forEach(p => {
+                container.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-info">
+                            <h4>${p.name}</h4>
+                            <p>${p.price}</p>
+                        </div>
+                        <button class="buy-btn" onclick="orderProduct('${p.name}', '${p.price}')">Купить</button>
+                    </div>
+                `;
+            });
+        }
+
+        function filterCat(cat) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderProducts(cat);
+        }
+
+        function orderProduct(name, price) {
+            // Передаем данные о выбранном товаре обратно в бота
+            const data = JSON.stringify({ product: name, price: price });
+            tg.sendData(data); 
+            tg.close(); // Закрываем WebApp после выбора
+        }
+
+        // Первая инициализация
+        renderProducts('steam');
+    </script>
+</body>
+</html>
