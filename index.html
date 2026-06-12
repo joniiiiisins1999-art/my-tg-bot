@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Игровой Маркет</title>
-        <script>
+          <script>
         // Инициализируем Telegram WebApp безопасным способом
         const tg = window.Telegram ? window.Telegram.WebApp : null;
         
         if (tg) {
-            tg.ready();   # Сообщаем Telegram, что сайт готов к работе
-            tg.expand();  # Раскрываем окно на максимум
+            tg.ready();
+            tg.expand();
         }
 
-        // Наш массив товаров
+        // База данных товаров
         const db = [
             {cat: 'steam', name: 'Пополнение CIS 500 ₽', price: 500},
             {cat: 'steam', name: 'Пополнение CIS 1000 ₽', price: 1000},
@@ -24,14 +24,20 @@
 
         let selectedProduct = null;
 
+        // Функция вывода товаров на экран
         function renderProducts(category) {
             const container = document.getElementById('products-list');
             if (!container) return;
             
             container.innerHTML = '';
             
-            // Фильтруем и выводим товары
             const filtered = db.filter(p => p.cat === category);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Товаров в этой категории пока нет</div>';
+                return;
+            }
+
             filtered.forEach(p => {
                 container.innerHTML += `
                     <div class="product-card">
@@ -45,16 +51,24 @@
             });
         }
 
+        // Надежная функция фильтрации БЕЗ использования встроенного event
         function filterCat(cat) {
-            // Переключение активной вкладки
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            if (event && event.target) {
-                event.target.classList.add('active');
-            }
-            
+            // Прячем форму заказа, если она была открыта
             const orderBox = document.getElementById('order-box');
             if (orderBox) orderBox.style.display = 'none';
+
+            // Снимаем класс active со всех трех кнопок
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(b => b.classList.remove('active'));
+
+            // Ищем нужную кнопку по названию категории и делаем её активной
+            buttons.forEach(b => {
+                if (b.getAttribute('onclick').includes(cat)) {
+                    b.classList.add('active');
+                }
+            });
             
+            // Перерисовываем товары
             renderProducts(cat);
         }
 
@@ -69,6 +83,9 @@
                 input.placeholder = cat === 'steam' ? 'Введите логин Steam (не никнейм)' : 'Введите email от аккаунта';
                 title.innerText = `Заказ: ${name}`;
                 orderBox.style.display = 'block';
+                
+                // Прокручиваем страницу вниз к форме ввода
+                orderBox.scrollIntoView({ behavior: 'smooth' });
             }
         }
 
@@ -89,18 +106,19 @@
             });
             
             if (tg) {
-                tg.sendData(data); // Отправляем данные в бота
-                tg.close();        // Закрываем окно
+                tg.sendData(data); // Отправляем JSON админу и в чат
+                tg.close();        // Закрываем WebApp окно
             } else {
-                alert('Данные заказа (откройте через Telegram): ' + data);
+                alert('Ошибка: Откройте маркет внутри Telegram чата!');
             }
         }
 
-        // Запуск вывода товаров при первой загрузке страницы
-        document.addEventListener("DOMContentLoaded", function() {
+        // Самый надежный запуск при полной загрузке страницы
+        window.onload = function() {
             renderProducts('steam');
-        });
+        };
     </script>
+
         const tg = window.Telegram.WebApp;
         tg.expand();
 
